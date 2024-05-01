@@ -275,11 +275,9 @@ func assertType(value interface{}, expectedType reflect.Type) interface{} {
 	return nil
 }
 func queryItem(tableName string, out interface{}, outType reflect.Type, expression expression.Expression) {
-	var testType []struct {
-		Year  int
-		Title string
-		// Plot   string
-		Rating float64
+	var items struct {
+		Email string `json:"email"`
+		Title string `json:"title"`
 	}
 	// {
 	// 	{2005, "Pride & Prejudice", "A classic romantic novel by Jane Austen.", 4.3},
@@ -288,54 +286,68 @@ func queryItem(tableName string, out interface{}, outType reflect.Type, expressi
 	// 	{2018, "Crazy Rich Asians", "A satirical romantic comedy novel by Kevin Kwan.", 4.1},
 	// 	{2020, "The Midnight Library", "A novel by Matt Haig about regrets and second chances.", 4.6},
 	// }
-	var items = []interface{}{
-		struct {
-			Year        int
-			Title, Plot string
-			Rating      float64
-		}{2005, "Pride & Prejudice", "A classic romantic novel by Jane Austen.", 4.3},
-		struct {
-			Year        int
-			Title, Plot string
-			Rating      float64
-		}{2010, "The Help", "A novel by Kathryn Stockett set in Mississippi during the civil rights era.", 4.5},
-		struct {
-			Year        int
-			Title, Plot string
-			Rating      float64
-		}{2014, "Gone Girl", "A psychological thriller novel by Gillian Flynn.", 4.2},
-		struct {
-			Year        int
-			Title, Plot string
-			Rating      float64
-		}{2018, "Crazy Rich Asians", "A satirical romantic comedy novel by Kevin Kwan.", 4.1},
-		struct {
-			Year        int
-			Title, Plot string
-			Rating      float64
-		}{2020, "The Midnight Library", "A novel by Matt Haig about regrets and second chances.", 4.6},
+
+	input := &dynamodb.QueryInput{
+		TableName:                 utils.PrepareTableName(tableName),
+		KeyConditionExpression:    expression.KeyCondition(),
+		ProjectionExpression:      expression.Projection(),
+		FilterExpression:          expression.Filter(),
+		ExpressionAttributeNames:  expression.Names(),
+		ExpressionAttributeValues: expression.Values(),
 	}
 
-	result := assertType(items, reflect.TypeOf(testType))
-	fmt.Println(result)
+	result, err := svc.Query(input)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	var datas []interface{}
+	for _, item := range result.Items {
+		var d interface{}
+		if err := dynamodbattribute.UnmarshalMap(item, &d); err != nil {
+			log.Fatal(err)
+		}
+		datas = append(datas, d)
+	}
+	fmt.Println(datas)
+	assertResult := assertType(datas, reflect.TypeOf(items))
+	fmt.Println(reflect.TypeOf(assertResult))
+
+	// result := assertType(items, reflect.TypeOf(items))
+	// fmt.Println(result)
+	// var items = []struct{}{
+	// 	struct {
+	// 		Year        int
+	// 		Title, Plot string
+	// 		Rating      float64
+	// 	}{2005, "Pride & Prejudice", "A classic romantic novel by Jane Austen.", 4.3},
+	// 	struct {
+	// 		Year        int
+	// 		Title, Plot string
+	// 		Rating      float64
+	// 	}{2010, "The Help", "A novel by Kathryn Stockett set in Mississippi during the civil rights era.", 4.5},
+	// 	struct {
+	// 		Year        int
+	// 		Title, Plot string
+	// 		Rating      float64
+	// 	}{2014, "Gone Girl", "A psychological thriller novel by Gillian Flynn.", 4.2},
+	// 	struct {
+	// 		Year        int
+	// 		Title, Plot string
+	// 		Rating      float64
+	// 	}{2018, "Crazy Rich Asians", "A satirical romantic comedy novel by Kevin Kwan.", 4.1},
+	// 	struct {
+	// 		Year        int
+	// 		Title, Plot string
+	// 		Rating      float64
+	// 	}{2020, "The Midnight Library", "A novel by Matt Haig about regrets and second chances.", 4.6},
+	// }
+
 	// if result != nil {
 	// 	intValue := result.(int)
 	// 	fmt.Println("intValue after type assertion:", intValue)
 	// } else {
 	// 	fmt.Println("intValue cannot be asserted to int")
-	// }
-	// input := &dynamodb.QueryInput{
-	// 	TableName:                 utils.PrepareTableName(tableName),
-	// 	KeyConditionExpression:    expression.KeyCondition(),
-	// 	ProjectionExpression:      expression.Projection(),
-	// 	FilterExpression:          expression.Filter(),
-	// 	ExpressionAttributeNames:  expression.Names(),
-	// 	ExpressionAttributeValues: expression.Values(),
-	// }
-
-	// result, err := svc.Query(input)
-	// if err != nil {
-	// 	log.Fatal(err)
 	// }
 
 	// items, ok := out.(*[]interface{})
