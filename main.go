@@ -298,7 +298,7 @@ func queryItemEndpoint(w http.ResponseWriter, r *http.Request) {
 	queryKey := types.DBKeys{
 		PartitionKey: types.DBkeyType{
 			Name:  "title",
-			Value: "The Big New Movie",
+			Value: "Ilaria Andre-2bc79336-cac8-4aff-be43-f84730bed326",
 		},
 	}
 
