@@ -267,38 +267,102 @@ func getItemEndpoint(w http.ResponseWriter, r *http.Request) {
 	fmt.Println(string(data))
 }
 
+func assertType(value interface{}, expectedType reflect.Type) interface{} {
+	// Perform type assertion
+	if reflect.TypeOf(value).ConvertibleTo(expectedType) {
+		return reflect.ValueOf(value).Convert(expectedType).Interface()
+	}
+	return nil
+}
 func queryItem(tableName string, out interface{}, outType reflect.Type, expression expression.Expression) {
-	input := &dynamodb.QueryInput{
-		TableName:                 utils.PrepareTableName(tableName),
-		KeyConditionExpression:    expression.KeyCondition(),
-		ProjectionExpression:      expression.Projection(),
-		FilterExpression:          expression.Filter(),
-		ExpressionAttributeNames:  expression.Names(),
-		ExpressionAttributeValues: expression.Values(),
+	var testType []struct {
+		Year  int
+		Title string
+		// Plot   string
+		Rating float64
+	}
+	// {
+	// 	{2005, "Pride & Prejudice", "A classic romantic novel by Jane Austen.", 4.3},
+	// 	{2010, "The Help", "A novel by Kathryn Stockett set in Mississippi during the civil rights era.", 4.5},
+	// 	{2014, "Gone Girl", "A psychological thriller novel by Gillian Flynn.", 4.2},
+	// 	{2018, "Crazy Rich Asians", "A satirical romantic comedy novel by Kevin Kwan.", 4.1},
+	// 	{2020, "The Midnight Library", "A novel by Matt Haig about regrets and second chances.", 4.6},
+	// }
+	var items = []interface{}{
+		struct {
+			Year        int
+			Title, Plot string
+			Rating      float64
+		}{2005, "Pride & Prejudice", "A classic romantic novel by Jane Austen.", 4.3},
+		struct {
+			Year        int
+			Title, Plot string
+			Rating      float64
+		}{2010, "The Help", "A novel by Kathryn Stockett set in Mississippi during the civil rights era.", 4.5},
+		struct {
+			Year        int
+			Title, Plot string
+			Rating      float64
+		}{2014, "Gone Girl", "A psychological thriller novel by Gillian Flynn.", 4.2},
+		struct {
+			Year        int
+			Title, Plot string
+			Rating      float64
+		}{2018, "Crazy Rich Asians", "A satirical romantic comedy novel by Kevin Kwan.", 4.1},
+		struct {
+			Year        int
+			Title, Plot string
+			Rating      float64
+		}{2020, "The Midnight Library", "A novel by Matt Haig about regrets and second chances.", 4.6},
 	}
 
-	result, err := svc.Query(input)
-	if err != nil {
-		log.Fatal(err)
-	}
+	result := assertType(items, reflect.TypeOf(testType))
+	fmt.Println(result)
+	// if result != nil {
+	// 	intValue := result.(int)
+	// 	fmt.Println("intValue after type assertion:", intValue)
+	// } else {
+	// 	fmt.Println("intValue cannot be asserted to int")
+	// }
+	// input := &dynamodb.QueryInput{
+	// 	TableName:                 utils.PrepareTableName(tableName),
+	// 	KeyConditionExpression:    expression.KeyCondition(),
+	// 	ProjectionExpression:      expression.Projection(),
+	// 	FilterExpression:          expression.Filter(),
+	// 	ExpressionAttributeNames:  expression.Names(),
+	// 	ExpressionAttributeValues: expression.Values(),
+	// }
 
-	for _, item := range result.Items {
-		fmt.Println(item)
-	}
+	// result, err := svc.Query(input)
+	// if err != nil {
+	// 	log.Fatal(err)
+	// }
+
+	// items, ok := out.(*[]interface{})
+	// if !ok {
+	// 	log.Fatal("out is not a slice of interface{}")
+	// }
+	// for _, item := range result.Items {
+	// 	var d interface{}
+	// 	if err := dynamodbattribute.UnmarshalMap(item, &d); err != nil {
+	// 		log.Fatal(err)
+	// 	}
+	// 	*items = append(*items, d)
+	// }
 }
 func queryItemEndpoint(w http.ResponseWriter, r *http.Request) {
-	// var ItemArr [](struct {
-	// 	Year   int
-	// 	Title  string
-	// 	Plot   string
-	// 	Rating float64
-	// })
-	var ItemArr interface{}
+	var ItemArr []struct {
+		Year   int
+		Title  string
+		Plot   string
+		Rating float64
+	}
+	// var ItemArr []interface{}
 
 	queryKey := types.DBKeys{
 		PartitionKey: types.DBkeyType{
 			Name:  "title",
-			Value: "The Big New Movie",
+			Value: "Ilaria Andre-2bc79336-cac8-4aff-be43-f84730bed326",
 		},
 	}
 
@@ -310,7 +374,7 @@ func queryItemEndpoint(w http.ResponseWriter, r *http.Request) {
 	}
 
 	queryItem("movies", &ItemArr, reflect.TypeOf(ItemArr), expr)
-	fmt.Println(ItemArr)
+	// fmt.Println(ItemArr)
 }
 
 // varToSetDataTo is a pointer.
