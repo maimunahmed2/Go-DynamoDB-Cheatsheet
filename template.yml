@@ -1,0 +1,18 @@
+Resources:
+  MyFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      Handler: index.handler
+      Runtime: nodejs14.x
+      CodeUri: ./
+      Events:
+        MyEvent:
+          Type: Api
+          Properties:
+            Path: /myendpoint
+            Method: get
+
+  MyTable:
+    Type: AWS::Serverless::SimpleTable
+    Properties:
+      TableName: MyTable
