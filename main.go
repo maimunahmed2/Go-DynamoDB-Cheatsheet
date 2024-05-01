@@ -267,7 +267,7 @@ func getItemEndpoint(w http.ResponseWriter, r *http.Request) {
 	fmt.Println(string(data))
 }
 
-func queryItem(tableName string, out interface{}, outType reflect.Type, expression expression.Expression) {
+func queryItem(tableName string, out *[]interface{}, expression expression.Expression) {
 	input := &dynamodb.QueryInput{
 		TableName:                 utils.PrepareTableName(tableName),
 		KeyConditionExpression:    expression.KeyCondition(),
@@ -282,18 +282,20 @@ func queryItem(tableName string, out interface{}, outType reflect.Type, expressi
 		log.Fatal(err)
 	}
 
+	var items []interface{}
 	for _, item := range result.Items {
-		fmt.Println(item)
+		var d interface{}
+		if err := dynamodbattribute.UnmarshalMap(item, &d); err != nil {
+			log.Fatal(err)
+		}
+		// Append to items slice
+		items = append(items, d)
 	}
+
+	*out = items
 }
 func queryItemEndpoint(w http.ResponseWriter, r *http.Request) {
-	// var ItemArr [](struct {
-	// 	Year   int
-	// 	Title  string
-	// 	Plot   string
-	// 	Rating float64
-	// })
-	var ItemArr interface{}
+	var ItemArr []interface{}
 
 	queryKey := types.DBKeys{
 		PartitionKey: types.DBkeyType{
@@ -309,7 +311,7 @@ func queryItemEndpoint(w http.ResponseWriter, r *http.Request) {
 		log.Fatal(err)
 	}
 
-	queryItem("movies", &ItemArr, reflect.TypeOf(ItemArr), expr)
+	queryItem("movies", &ItemArr, expr)
 	fmt.Println(ItemArr)
 }
 
